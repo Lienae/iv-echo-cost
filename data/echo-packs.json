@@ -1,18 +1,23 @@
 {
-  "_source": "웹 검색으로 찾은 서드파티 충전 사이트(bittopup) 기준 USD 단가, 확인일 2026-08-05. 공식 스토어 원화(KRW) 가격표는 아직 확인 못함.",
-  "_caveat": "메아리 환율은 스토어 지역(국가) 설정에 따라 달라진다는 유저 제보가 있음 — 즉 '고정된 원화 단가표'가 존재하지 않을 수 있음. priceKrw는 실제 게임 내 상점 스크린샷으로 검증 전까지 null로 둔다.",
+  "_source": "priceJpy: https://pay.neteasegames.com/identityv/topup?c=m.3 (NetEase 공식 일본 직결제 사이트, 헤드리스 브라우저로 실제 렌더링 확인, 확인일 2026-08-06). priceUsd: bittopup.com(서드파티 충전대행) 할인가, 같은 날 재확인 — 두 소스의 echo 티어(60/185/305/690/2025/3330/6590)가 정확히 일치해 신뢰도를 보강함. 이전에 적혀있던 66/759/7249/4090 티어는 다른(구) 세션에서 확인한 값으로 이번에 재확인한 두 소스와 맞지 않아 교체함.",
+  "_caveat": "이 페이지는 지역이 Japan으로 고정돼 있어(언어만 선택 가능, 지역 선택 불가, c 파라미터를 바꿔봐도 동일) 한국(KRW) 가격은 이 경로로 확인 불가. 한국은 앱스토어/구글플레이 인앱결제로만 구매 가능하고 완전히 다른 티어 구조를 쓰는 것으로 보임 — echo-price-estimate.json의 verifiedSamples 참고 (75메아리=1,500원, iOS, 지인 제보, 표본 1개, Android 미확인). priceUsd는 서드파티 할인가라 공식가와 다를 수 있음.",
   "schema": {
     "id": "고유 id",
-    "echo": "지급되는 메아리 수량(보너스 포함 총량)",
-    "priceUsd": "US 스토어 기준 가격",
-    "priceKrw": "한국 스토어 기준 가격 (미확인 시 null)",
+    "echo": "지급되는 메아리 수량(패키지 자체 보너스 포함, 이벤트성 추가 보너스는 별도)",
+    "priceUsd": "bittopup(서드파티) 할인가, 확인일 2026-08-05/06, 공식가 아님",
+    "priceJpy": "NetEase 공식 일본 직결제 가격(엔화), 확인일 2026-08-06",
+    "priceKrw": "한국 스토어 기준 가격 (미확인 시 null, 이 티어 구조와 다를 수 있음)",
     "limited": "상시 판매가 아닌 이벤트 한정 패키지인지 여부",
     "eventName": "한정 패키지일 경우 이벤트명, 아니면 null"
   },
   "packs": [
-    { "id": "pack-0.99",  "echo": 66,   "priceUsd": 0.99,  "priceKrw": null, "limited": false, "eventName": null },
-    { "id": "pack-9.99",  "echo": 759,  "priceUsd": 9.99,  "priceKrw": null, "limited": false, "eventName": null },
-    { "id": "pack-99.99", "echo": 7249, "priceUsd": 99.99, "priceKrw": null, "limited": false, "eventName": null },
-    { "id": "pack-49.99-lny", "echo": 4090, "priceUsd": 49.99, "priceKrw": null, "limited": true, "eventName": "Lunar New Year" }
+    { "id": "pack-60",   "echo": 60,   "priceUsd": 0.85,  "priceJpy": 120,   "priceKrw": null, "limited": false, "eventName": null },
+    { "id": "pack-185",  "echo": 185,  "priceUsd": 2.58,  "priceJpy": 370,   "priceKrw": null, "limited": false, "eventName": null },
+    { "id": "pack-305",  "echo": 305,  "priceUsd": 4.31,  "priceJpy": 610,   "priceKrw": null, "limited": false, "eventName": null },
+    { "id": "pack-690",  "echo": 690,  "priceUsd": 8.63,  "priceJpy": 1220,  "priceKrw": null, "limited": false, "eventName": null },
+    { "id": "pack-2025", "echo": 2025, "priceUsd": 25.90, "priceJpy": 3680,  "priceKrw": null, "limited": false, "eventName": null },
+    { "id": "pack-3330", "echo": 3330, "priceUsd": 43.17, "priceJpy": 6100,  "priceKrw": null, "limited": false, "eventName": null },
+    { "id": "pack-6590", "echo": 6590, "priceUsd": 86.35, "priceJpy": 12000, "priceKrw": null, "limited": false, "eventName": null },
+    { "id": "pack-4090-lny", "echo": 4090, "priceUsd": 49.99, "priceJpy": null, "priceKrw": null, "limited": true, "eventName": "Lunar New Year (서드파티 bittopup 표기, 공식 확인 안 됨, 2026-08-05 기록)" }
   ]
 }
