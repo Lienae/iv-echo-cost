@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>제5인격 메아리 계산기</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <main>
+    <h1>제5인격 메아리 계산기</h1>
+    <p class="subtitle">스킨을 사려면 메아리를 얼마나, 그리고 대략 얼마를 현질해야 하는지 계산합니다.</p>
+
+    <section class="card">
+      <label for="owned-echo">현재 보유 메아리</label>
+      <input id="owned-echo" type="number" min="0" value="0" />
+    </section>
+
+    <section class="card">
+      <label for="skin-select">스킨 선택</label>
+      <select id="skin-select"></select>
+      <p id="skin-status" class="hint"></p>
+    </section>
+
+    <section class="card" id="rarity-fallback" hidden>
+      <label for="rarity-select">또는 등급으로 계산</label>
+      <select id="rarity-select"></select>
+    </section>
+
+    <section class="card result" id="result" hidden>
+      <div class="result-row">
+        <span class="result-label">스킨 가격</span>
+        <span id="result-echo-price" class="result-value"></span>
+      </div>
+      <div class="result-row">
+        <span class="result-label">추가로 필요한 메아리</span>
+        <span id="result-shortfall" class="result-value"></span>
+      </div>
+      <div class="result-row highlight">
+        <span class="result-label">예상 결제 금액</span>
+        <span id="result-krw" class="result-value"></span>
+      </div>
+      <p class="hint" id="result-caveat"></p>
+    </section>
+  </main>
+
+  <script src="src/calc.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

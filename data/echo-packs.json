@@ -1,0 +1,18 @@
+{
+  "_source": "웹 검색으로 찾은 서드파티 충전 사이트(bittopup) 기준 USD 단가, 확인일 2026-08-05. 공식 스토어 원화(KRW) 가격표는 아직 확인 못함.",
+  "_caveat": "메아리 환율은 스토어 지역(국가) 설정에 따라 달라진다는 유저 제보가 있음 — 즉 '고정된 원화 단가표'가 존재하지 않을 수 있음. priceKrw는 실제 게임 내 상점 스크린샷으로 검증 전까지 null로 둔다.",
+  "schema": {
+    "id": "고유 id",
+    "echo": "지급되는 메아리 수량(보너스 포함 총량)",
+    "priceUsd": "US 스토어 기준 가격",
+    "priceKrw": "한국 스토어 기준 가격 (미확인 시 null)",
+    "limited": "상시 판매가 아닌 이벤트 한정 패키지인지 여부",
+    "eventName": "한정 패키지일 경우 이벤트명, 아니면 null"
+  },
+  "packs": [
+    { "id": "pack-0.99",  "echo": 66,   "priceUsd": 0.99,  "priceKrw": null, "limited": false, "eventName": null },
+    { "id": "pack-9.99",  "echo": 759,  "priceUsd": 9.99,  "priceKrw": null, "limited": false, "eventName": null },
+    { "id": "pack-99.99", "echo": 7249, "priceUsd": 99.99, "priceKrw": null, "limited": false, "eventName": null },
+    { "id": "pack-49.99-lny", "echo": 4090, "priceUsd": 49.99, "priceKrw": null, "limited": true, "eventName": "Lunar New Year" }
+  ]
+}

@@ -1,0 +1,10 @@
+{
+  "_source": "https://namu.wiki/w/제5인격/외관 장식 (확인일: 2026-08-05)",
+  "_note": "등급별 기본 메아리 가격. 스킨 개별 가격이 이 값과 다르면 skins.json 쪽 echoPrice가 우선한다.",
+  "rarities": [
+    { "id": "scarce",    "name": "드문",  "nameEn": "Scarce",    "echoPrice": 108 },
+    { "id": "unique",    "name": "독특",  "nameEn": "Unique",    "echoPrice": 318 },
+    { "id": "rare",      "name": "진기",  "nameEn": "Rare",      "echoPrice": 1388 },
+    { "id": "legendary", "name": "희대",  "nameEn": "Legendary", "echoPrice": 2888 }
+  ]
+}
