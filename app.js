@@ -1,3 +1,7 @@
+// index.html의 script/link 쿼리 버전과 맞춰서 올릴 것 — 배포 후에도 브라우저/CDN
+// 캐시 때문에 예전 파일이 보이는 걸 방지하기 위한 수동 캐시 버스팅.
+const ASSET_VERSION = "2";
+
 const state = {
   rarities: [],
   skins: [],
@@ -11,9 +15,9 @@ const state = {
 
 async function loadData() {
   const [raritiesRes, skinsRes, packsRes] = await Promise.all([
-    fetch("data/rarities.json"),
-    fetch("data/skins.json"),
-    fetch("data/echo-packs.json"),
+    fetch(`data/rarities.json?v=${ASSET_VERSION}`),
+    fetch(`data/skins.json?v=${ASSET_VERSION}`),
+    fetch(`data/echo-packs.json?v=${ASSET_VERSION}`),
   ]);
   const raritiesJson = await raritiesRes.json();
   const skinsJson = await skinsRes.json();
@@ -178,20 +182,53 @@ function addPriceItem(container, label, valueText, note) {
   container.appendChild(item);
 }
 
-function renderBasisPriceList() {
+function formatUnitPrice(pack, symbol) {
+  const unit = pack.price / pack.echo;
+  const unitText = Number.isInteger(unit) ? String(unit) : unit.toFixed(1);
+  return `개당 ${unitText}${symbol}/메아리`;
+}
+
+// 두 결제 기준을 한 화면에서 비교할 수 있도록 전부 표로 보여준다.
+// 선택된 기준은 카드에 강조 표시되고, 계산에는 그 기준만 쓰인다.
+function renderBasisTables() {
   const container = document.getElementById("price-list");
   container.innerHTML = "";
-  const basis = currentBasis();
-  if (!basis) return;
-  for (const pack of basis.packs) {
-    addPriceItem(container, `${pack.echo}메아리`, `${pack.price.toLocaleString()}${basis.currencySymbol}`, null);
+
+  for (const basis of state.bases) {
+    const group = document.createElement("div");
+    group.className = "price-group" + (basis.id === state.selectedBasisId ? " selected" : "");
+
+    const header = document.createElement("button");
+    header.type = "button";
+    header.className = "price-group-header";
+    header.textContent = basis.label;
+    header.addEventListener("click", () => selectBasis(basis.id));
+    group.appendChild(header);
+
+    if (basis.note || basis.source) {
+      const sourceEl = document.createElement("p");
+      sourceEl.className = "hint";
+      sourceEl.textContent = basis.note || basis.source;
+      group.appendChild(sourceEl);
+    }
+
+    for (const pack of basis.packs) {
+      addPriceItem(
+        group,
+        `${pack.echo}메아리`,
+        `${pack.price.toLocaleString()}${basis.currencySymbol}`,
+        formatUnitPrice(pack, basis.currencySymbol)
+      );
+    }
+
+    container.appendChild(group);
   }
 }
 
 function selectBasis(id) {
   state.selectedBasisId = id;
   renderBasisRadios();
-  renderBasisPriceList();
+  renderBasisTables();
   const basis = currentBasis();
   if (basis && basis.currency === "JPY") ensureFxRate();
   render();
@@ -219,9 +256,6 @@ function renderBasisRadios() {
     label.appendChild(span);
     container.appendChild(label);
   }
-
-  const basis = currentBasis();
-  document.getElementById("basis-note").textContent = basis?.note || basis?.source || "";
 }
 
 async function ensureFxRate() {
@@ -338,7 +372,7 @@ async function init() {
 
   state.selectedBasisId = state.bases[0]?.id || null;
   renderBasisRadios();
-  renderBasisPriceList();
+  renderBasisTables();
   if (currentBasis()?.currency === "JPY") ensureFxRate();
 
   if (state.skins.length === 0) {
