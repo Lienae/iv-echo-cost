@@ -16,23 +16,29 @@
       <input id="owned-echo" type="number" min="0" value="0" />
     </section>
 
-    <section class="card">
-      <label for="skin-sort">정렬</label>
-      <select id="skin-sort">
-        <option value="character">캐릭터순</option>
-        <option value="price-asc">가격 낮은순</option>
-        <option value="price-desc">가격 높은순</option>
-        <option value="name">이름순</option>
-      </select>
-      <label for="skin-select" class="skin-select-label">스킨 선택</label>
-      <select id="skin-select"></select>
-      <p id="skin-status" class="hint"></p>
+    <section class="card" id="character-section">
+      <label for="character-filter">캐릭터 선택</label>
+      <input id="character-filter" type="text" placeholder="캐릭터 이름으로 검색" autocomplete="off" />
+      <div id="character-grid" class="card-grid"></div>
+    </section>
+
+    <section class="card" id="skin-section" hidden>
+      <div class="skin-section-header">
+        <h2 id="selected-character-name"></h2>
+        <select id="skin-sort">
+          <option value="name">이름순</option>
+          <option value="price-asc">가격 낮은순</option>
+          <option value="price-desc">가격 높은순</option>
+        </select>
+      </div>
+      <div id="skin-grid" class="card-grid"></div>
       <p id="skin-unavailable" class="hint warn" hidden></p>
     </section>
 
     <section class="card" id="rarity-fallback" hidden>
       <label for="rarity-select">또는 등급으로 계산</label>
       <select id="rarity-select"></select>
+      <p id="skin-status" class="hint"></p>
     </section>
 
     <section class="card result" id="result" hidden>

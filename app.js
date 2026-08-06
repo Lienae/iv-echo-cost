@@ -2,6 +2,8 @@ const state = {
   rarities: [],
   skins: [],
   estimate: null,
+  selectedCharacter: null,
+  selectedSkinId: null,
 };
 
 async function loadData() {
@@ -30,6 +32,13 @@ const CURRENCY_LABELS = {
   other: "기타 재화 전용",
 };
 
+const RARITY_CLASS = {
+  scarce: "rarity-scarce",
+  unique: "rarity-unique",
+  rare: "rarity-rare",
+  legendary: "rarity-legendary",
+};
+
 function priceLabel(skin) {
   if (skin.currency === "echo") {
     const price = skin.echoPrice ?? rarityById(skin.rarityId)?.echoPrice ?? "?";
@@ -53,67 +62,82 @@ function comparePriceSort(a, b, direction) {
   return direction === "asc" ? pa - pb : pb - pa;
 }
 
-function groupByCharacter(skins) {
-  const map = new Map();
-  for (const skin of skins) {
-    if (!map.has(skin.character)) map.set(skin.character, []);
-    map.get(skin.character).push(skin);
-  }
-  for (const group of map.values()) {
-    group.sort((a, b) => a.name.localeCompare(b.name, "ko"));
-  }
-  return map;
+function characterList() {
+  return [...new Set(state.skins.map((s) => s.character))].sort((a, b) => a.localeCompare(b, "ko"));
 }
 
-function makeSkinOption(skin) {
-  const option = document.createElement("option");
-  option.value = skin.id;
-  option.textContent = `${skin.character} - ${skin.name} (${priceLabel(skin)})`;
-  return option;
+function renderCharacterGrid() {
+  const grid = document.getElementById("character-grid");
+  const filter = document.getElementById("character-filter").value.trim();
+  grid.innerHTML = "";
+
+  const chars = characterList().filter((c) => !filter || c.includes(filter));
+  for (const char of chars) {
+    const card = document.createElement("button");
+    card.type = "button";
+    card.className = "char-card" + (char === state.selectedCharacter ? " selected" : "");
+    card.textContent = char;
+    card.addEventListener("click", () => selectCharacter(char));
+    grid.appendChild(card);
+  }
+
+  if (chars.length === 0) {
+    const empty = document.createElement("p");
+    empty.className = "hint";
+    empty.textContent = "일치하는 캐릭터가 없습니다.";
+    grid.appendChild(empty);
+  }
 }
 
-function populateSkinSelect() {
-  const select = document.getElementById("skin-select");
-  const sortSelect = document.getElementById("skin-sort");
-  const status = document.getElementById("skin-status");
-  const rarityFallback = document.getElementById("rarity-fallback");
+function selectCharacter(char) {
+  state.selectedCharacter = char;
+  state.selectedSkinId = null;
+  renderCharacterGrid();
 
-  if (state.skins.length === 0) {
-    select.hidden = true;
-    sortSelect.hidden = true;
-    status.textContent = "스킨 데이터가 아직 준비되지 않았습니다. 아래에서 등급으로 계산해주세요.";
-    rarityFallback.hidden = false;
-    return;
-  }
+  document.getElementById("skin-section").hidden = false;
+  document.getElementById("selected-character-name").textContent = char;
+  renderSkinGrid();
+  render();
+}
 
-  const previousValue = select.value;
-  select.innerHTML = "";
+function skinsForSelectedCharacter() {
+  const list = state.skins.filter((s) => s.character === state.selectedCharacter);
+  const sortMode = document.getElementById("skin-sort").value;
+  if (sortMode === "price-asc") list.sort((a, b) => comparePriceSort(a, b, "asc"));
+  else if (sortMode === "price-desc") list.sort((a, b) => comparePriceSort(a, b, "desc"));
+  else list.sort((a, b) => a.name.localeCompare(b.name, "ko"));
+  return list;
+}
 
-  if (sortSelect.value === "character") {
-    const grouped = groupByCharacter(state.skins);
-    const characters = [...grouped.keys()].sort((a, b) => a.localeCompare(b, "ko"));
-    for (const character of characters) {
-      const group = document.createElement("optgroup");
-      group.label = character;
-      for (const skin of grouped.get(character)) {
-        group.appendChild(makeSkinOption(skin));
-      }
-      select.appendChild(group);
-    }
-  } else {
-    const sorted = [...state.skins];
-    if (sortSelect.value === "price-asc") {
-      sorted.sort((a, b) => comparePriceSort(a, b, "asc"));
-    } else if (sortSelect.value === "price-desc") {
-      sorted.sort((a, b) => comparePriceSort(a, b, "desc"));
-    } else if (sortSelect.value === "name") {
-      sorted.sort((a, b) => a.name.localeCompare(b.name, "ko"));
-    }
-    for (const skin of sorted) select.appendChild(makeSkinOption(skin));
-  }
+function renderSkinGrid() {
+  const grid = document.getElementById("skin-grid");
+  grid.innerHTML = "";
 
-  if ([...select.options].some((o) => o.value === previousValue)) {
-    select.value = previousValue;
+  for (const skin of skinsForSelectedCharacter()) {
+    const unavailable = skin.currency !== "echo";
+    const card = document.createElement("button");
+    card.type = "button";
+    card.className =
+      `skin-card ${RARITY_CLASS[skin.rarityId] || ""}` +
+      (skin.id === state.selectedSkinId ? " selected" : "") +
+      (unavailable ? " unavailable" : "");
+
+    const nameEl = document.createElement("span");
+    nameEl.className = "skin-name";
+    nameEl.textContent = skin.name;
+
+    const priceEl = document.createElement("span");
+    priceEl.className = "skin-price";
+    priceEl.textContent = priceLabel(skin);
+
+    card.appendChild(nameEl);
+    card.appendChild(priceEl);
+    card.addEventListener("click", () => {
+      state.selectedSkinId = skin.id;
+      renderSkinGrid();
+      render();
+    });
+    grid.appendChild(card);
   }
 }
 
@@ -129,9 +153,8 @@ function populateRaritySelect() {
 }
 
 function selectedSkin() {
-  if (state.skins.length === 0) return null;
-  const skinId = document.getElementById("skin-select").value;
-  return state.skins.find((s) => s.id === skinId) || null;
+  if (!state.selectedSkinId) return null;
+  return state.skins.find((s) => s.id === state.selectedSkinId) || null;
 }
 
 function currentTargetEcho() {
@@ -181,16 +204,22 @@ function render() {
 
 async function init() {
   await loadData();
-  populateSkinSelect();
   populateRaritySelect();
 
+  if (state.skins.length === 0) {
+    document.getElementById("character-section").hidden = true;
+    document.getElementById("skin-section").hidden = true;
+    document.getElementById("rarity-fallback").hidden = false;
+    document.getElementById("skin-status").textContent =
+      "스킨 데이터가 아직 준비되지 않았습니다. 아래에서 등급으로 계산해주세요.";
+  } else {
+    renderCharacterGrid();
+    document.getElementById("character-filter").addEventListener("input", renderCharacterGrid);
+    document.getElementById("skin-sort").addEventListener("change", renderSkinGrid);
+  }
+
   document.getElementById("owned-echo").addEventListener("input", render);
-  document.getElementById("skin-select").addEventListener("change", render);
   document.getElementById("rarity-select").addEventListener("change", render);
-  document.getElementById("skin-sort").addEventListener("change", () => {
-    populateSkinSelect();
-    render();
-  });
 
   render();
 }
