@@ -10,6 +10,14 @@
   <main>
     <h1>제5인격 메아리 계산기</h1>
     <p class="subtitle">스킨을 사려면 메아리를 얼마나, 그리고 대략 얼마를 현질해야 하는지 계산합니다.</p>
+    <p class="mobile-note">이 페이지는 모바일 화면을 기준으로 만들어졌습니다. PC로 봐도 모바일과 동일한 레이아웃으로 표시됩니다.</p>
+
+    <section class="card" id="basis-section">
+      <label>결제 기준</label>
+      <div id="basis-radio-group" class="basis-radio-group"></div>
+      <p id="basis-note" class="hint"></p>
+      <div id="price-list" class="price-list"></div>
+    </section>
 
     <section class="card">
       <label for="owned-echo">현재 보유 메아리</label>
@@ -51,9 +59,11 @@
         <span id="result-shortfall" class="result-value"></span>
       </div>
       <div class="result-row highlight">
-        <span class="result-label">예상 결제 금액</span>
+        <span class="result-label">결제 금액</span>
         <span id="result-krw" class="result-value"></span>
       </div>
+      <p class="hint" id="result-krw-sub"></p>
+      <p class="hint" id="result-combination"></p>
       <p class="hint" id="result-caveat"></p>
     </section>
   </main>

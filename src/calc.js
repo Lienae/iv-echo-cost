@@ -22,20 +22,20 @@ function estimateKrwCost(targetEcho, ownedEcho, estimate) {
 
 /**
  * 패키지 단위 조합 최적화(동전 교환 DP).
- * packs: [{ priceKrw, echo }] — priceKrw가 확정된 패키지만 넘길 것.
- * shortfall만큼의 메아리를 "이상"으로 채우는 최소 원화 조합을 찾는다.
+ * packs: [{ price, echo }] — 통화 무관(원화든 엔화든), price가 있는 패키지만 넘길 것.
+ * shortfall만큼의 메아리를 "이상"으로 채우는 최소 금액 조합을 찾는다.
  * (패키지는 소수점 없이 정수 개수만 구매 가능, 남는 메아리는 버려짐)
  */
 function computeExactCost(targetEcho, ownedEcho, packs) {
   const shortfall = echoShortfall(targetEcho, ownedEcho);
-  if (shortfall === 0) return { totalKrw: 0, combination: [] };
+  if (shortfall === 0) return { total: 0, combination: [] };
 
-  const validPacks = packs.filter((p) => typeof p.priceKrw === "number" && p.echo > 0);
+  const validPacks = packs.filter((p) => typeof p.price === "number" && p.echo > 0);
   if (validPacks.length === 0) {
-    throw new Error("priceKrw가 채워진 패키지가 없습니다. echo-packs.json을 먼저 채워주세요.");
+    throw new Error("price가 채워진 패키지가 없습니다. echo-packs.json을 먼저 채워주세요.");
   }
 
-  // minCost[e] = e 이상의 메아리를 채우는 최소 원화 (e: 0..shortfall)
+  // minCost[e] = e 이상의 메아리를 채우는 최소 금액 (e: 0..shortfall)
   const minCost = new Array(shortfall + 1).fill(Infinity);
   const choice = new Array(shortfall + 1).fill(null);
   minCost[0] = 0;
@@ -43,7 +43,7 @@ function computeExactCost(targetEcho, ownedEcho, packs) {
   for (let e = 1; e <= shortfall; e++) {
     for (const pack of validPacks) {
       const prevIndex = Math.max(0, e - pack.echo);
-      const cost = minCost[prevIndex] + pack.priceKrw;
+      const cost = minCost[prevIndex] + pack.price;
       if (cost < minCost[e]) {
         minCost[e] = cost;
         choice[e] = pack;
@@ -59,7 +59,7 @@ function computeExactCost(targetEcho, ownedEcho, packs) {
     cursor = Math.max(0, cursor - pack.echo);
   }
 
-  return { totalKrw: minCost[shortfall], combination };
+  return { total: minCost[shortfall], combination };
 }
 
 const api = { echoShortfall, estimateKrwCost, computeExactCost };

@@ -1,21 +1,25 @@
 const state = {
   rarities: [],
   skins: [],
-  estimate: null,
+  bases: [],
+  selectedBasisId: null,
+  jpyToKrwRate: null,
+  fxFetchFailed: false,
   selectedCharacter: null,
   selectedSkinId: null,
 };
 
 async function loadData() {
-  const [raritiesRes, skinsRes, estimateRes] = await Promise.all([
+  const [raritiesRes, skinsRes, packsRes] = await Promise.all([
     fetch("data/rarities.json"),
     fetch("data/skins.json"),
-    fetch("data/echo-price-estimate.json"),
+    fetch("data/echo-packs.json"),
   ]);
   const raritiesJson = await raritiesRes.json();
   const skinsJson = await skinsRes.json();
+  const packsJson = await packsRes.json();
   state.rarities = raritiesJson.rarities;
-  state.estimate = await estimateRes.json();
+  state.bases = packsJson.bases || [];
 
   const realSkins = (skinsJson.skins || []).filter((s) => s.id !== "EXAMPLE_DELETE_ME");
   state.skins = realSkins;
@@ -23,6 +27,10 @@ async function loadData() {
 
 function rarityById(id) {
   return state.rarities.find((r) => r.id === id);
+}
+
+function currentBasis() {
+  return state.bases.find((b) => b.id === state.selectedBasisId) || null;
 }
 
 const CURRENCY_LABELS = {
@@ -141,6 +149,107 @@ function renderSkinGrid() {
   }
 }
 
+function addPriceItem(container, label, valueText, note) {
+  const item = document.createElement("div");
+  item.className = "price-item";
+
+  const main = document.createElement("div");
+  main.className = "price-item-main";
+
+  const labelEl = document.createElement("span");
+  labelEl.className = "price-item-platform";
+  labelEl.textContent = label;
+
+  const valueEl = document.createElement("span");
+  valueEl.className = "price-item-value";
+  valueEl.textContent = valueText;
+
+  main.appendChild(labelEl);
+  main.appendChild(valueEl);
+  item.appendChild(main);
+
+  if (note) {
+    const noteEl = document.createElement("div");
+    noteEl.className = "price-item-note";
+    noteEl.textContent = note;
+    item.appendChild(noteEl);
+  }
+
+  container.appendChild(item);
+}
+
+function renderBasisPriceList() {
+  const container = document.getElementById("price-list");
+  container.innerHTML = "";
+  const basis = currentBasis();
+  if (!basis) return;
+  for (const pack of basis.packs) {
+    addPriceItem(container, `${pack.echo}메아리`, `${pack.price.toLocaleString()}${basis.currencySymbol}`, null);
+  }
+}
+
+function selectBasis(id) {
+  state.selectedBasisId = id;
+  renderBasisRadios();
+  renderBasisPriceList();
+  const basis = currentBasis();
+  if (basis && basis.currency === "JPY") ensureFxRate();
+  render();
+}
+
+function renderBasisRadios() {
+  const container = document.getElementById("basis-radio-group");
+  container.innerHTML = "";
+
+  for (const basis of state.bases) {
+    const label = document.createElement("label");
+    label.className = "basis-radio" + (basis.id === state.selectedBasisId ? " selected" : "");
+
+    const input = document.createElement("input");
+    input.type = "radio";
+    input.name = "basis";
+    input.value = basis.id;
+    input.checked = basis.id === state.selectedBasisId;
+    input.addEventListener("change", () => selectBasis(basis.id));
+
+    const span = document.createElement("span");
+    span.textContent = basis.label;
+
+    label.appendChild(input);
+    label.appendChild(span);
+    container.appendChild(label);
+  }
+
+  const basis = currentBasis();
+  document.getElementById("basis-note").textContent = basis?.note || basis?.source || "";
+}
+
+async function ensureFxRate() {
+  if (state.jpyToKrwRate !== null || state.fxFetchFailed) return;
+  try {
+    const res = await fetch("https://open.er-api.com/v6/latest/JPY");
+    const json = await res.json();
+    state.jpyToKrwRate = json.rates?.KRW ?? null;
+    if (state.jpyToKrwRate === null) state.fxFetchFailed = true;
+  } catch (e) {
+    state.fxFetchFailed = true;
+  }
+  render();
+}
+
+function formatCombination(combination) {
+  if (combination.length === 0) return "";
+  const counts = new Map();
+  for (const pack of combination) {
+    const key = pack.echo;
+    counts.set(key, (counts.get(key) || 0) + 1);
+  }
+  const parts = [...counts.entries()]
+    .sort((a, b) => b[0] - a[0])
+    .map(([echo, count]) => `${echo}메아리×${count}`);
+  return `구매 조합: ${parts.join(" + ")}`;
+}
+
 function populateRaritySelect() {
   const select = document.getElementById("rarity-select");
   select.innerHTML = "";
@@ -183,21 +292,42 @@ function render() {
   unavailableNotice.hidden = true;
 
   const target = currentTargetEcho();
+  const basis = currentBasis();
+  const subEl = document.getElementById("result-krw-sub");
+  const comboEl = document.getElementById("result-combination");
 
-  if (target === null) {
+  if (target === null || !basis) {
     resultSection.hidden = true;
     return;
   }
 
   const shortfall = window.IVEchoCalc.echoShortfall(target, owned);
-  const krw = window.IVEchoCalc.estimateKrwCost(target, owned, state.estimate);
+  const { total, combination } = window.IVEchoCalc.computeExactCost(target, owned, basis.packs);
 
   document.getElementById("result-echo-price").textContent = `${target}메아리`;
   document.getElementById("result-shortfall").textContent = `${shortfall}메아리`;
   document.getElementById("result-krw").textContent =
-    shortfall === 0 ? "이미 충분함" : `약 ${krw.toLocaleString()}원`;
+    shortfall === 0 ? "이미 충분함" : `${total.toLocaleString()}${basis.currencySymbol}`;
+
+  if (shortfall > 0 && basis.currency === "JPY") {
+    subEl.hidden = false;
+    if (state.jpyToKrwRate) {
+      const krwEq = Math.round(total * state.jpyToKrwRate);
+      subEl.textContent = `≈ 약 ${krwEq.toLocaleString()}원 (실시간 환율 참고, 카드사 환율·수수료는 별도)`;
+    } else if (state.fxFetchFailed) {
+      subEl.textContent = "환율 조회 실패 — 엔화 금액만 표시됩니다.";
+    } else {
+      subEl.textContent = "환율 조회 중...";
+    }
+  } else {
+    subEl.hidden = true;
+  }
+
+  comboEl.textContent = shortfall > 0 ? formatCombination(combination) : "";
+
   document.getElementById("result-caveat").textContent =
-    "* 실제 게임 내 패키지 단가표가 아직 확보되지 않아, 메아리 1개 ≈ 18원(커뮤니티 추정치) 기준 근사값입니다. 실제 결제 금액과 차이가 있을 수 있습니다.";
+    `* "${basis.label}" 실제 단가표(${basis.source}) 기준 정확 계산입니다.` +
+    (basis.currency === "JPY" ? " 실제 청구액은 카드사 환율·해외결제 수수료에 따라 달라질 수 있습니다." : "");
 
   resultSection.hidden = false;
 }
@@ -205,6 +335,11 @@ function render() {
 async function init() {
   await loadData();
   populateRaritySelect();
+
+  state.selectedBasisId = state.bases[0]?.id || null;
+  renderBasisRadios();
+  renderBasisPriceList();
+  if (currentBasis()?.currency === "JPY") ensureFxRate();
 
   if (state.skins.length === 0) {
     document.getElementById("character-section").hidden = true;

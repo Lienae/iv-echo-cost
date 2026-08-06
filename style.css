@@ -1,5 +1,5 @@
-/* 모바일 사용을 기준으로 설계됨 — 대부분 유저가 모바일로 접속한다는 전제로
-   카드 그리드/터치 타깃 크기를 우선 잡고, 넓은 화면은 grid auto-fill로 자연 확장. */
+/* 모바일 화면을 기준으로 만들어졌음 — 데스크톱에서 열어도 반응형으로 넓어지지
+   않고 모바일 레이아웃 그대로 가운데 고정폭으로 보이게 한다(main의 max-width). */
 
 :root {
   color-scheme: light dark;
@@ -33,9 +33,16 @@ body {
 }
 
 main {
-  max-width: 720px;
+  /* 모바일 폭으로 고정 — 화면이 넓어져도 이 이상 안 넓어짐 */
+  max-width: 430px;
   margin: 0 auto;
   padding: 2rem 1.25rem 4rem;
+}
+
+.mobile-note {
+  color: var(--muted);
+  font-size: 0.75rem;
+  margin: 0 0 1.25rem;
 }
 
 h1 {
@@ -80,6 +87,70 @@ input, select {
   font-size: 0.78rem;
   margin: 0.5rem 0 0;
   line-height: 1.4;
+}
+
+.basis-radio-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.basis-radio {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.55rem 0.75rem;
+  min-height: 44px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--text);
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.basis-radio.selected {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 1px var(--accent) inset;
+}
+
+.basis-radio input {
+  width: auto;
+  margin: 0;
+  accent-color: var(--accent);
+}
+
+.price-item {
+  padding: 0.5rem 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.price-item:last-child {
+  border-bottom: none;
+}
+
+.price-item-main {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 0.4rem 0.75rem;
+  font-size: 0.88rem;
+}
+
+.price-item-platform {
+  font-weight: 600;
+}
+
+.price-item-value {
+  color: var(--text);
+}
+
+.price-item-note {
+  color: var(--muted);
+  font-size: 0.74rem;
+  margin-top: 0.15rem;
 }
 
 .hint.warn {
