@@ -82,6 +82,22 @@ input, select {
   font-size: 1rem;
 }
 
+.text-button {
+  appearance: none;
+  min-height: 44px;
+  width: 100%;
+  margin-top: 0.25rem;
+  padding: 0.6rem 0.7rem;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--text);
+  font-family: inherit;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
 .hint {
   color: var(--muted);
   font-size: 0.78rem;
@@ -119,6 +135,14 @@ input, select {
   width: auto;
   margin: 0;
   accent-color: var(--accent);
+}
+
+.price-list {
+  margin-top: 0.75rem;
+}
+
+.price-list[hidden] {
+  display: none;
 }
 
 .price-group {
@@ -270,6 +294,17 @@ input, select {
 .search-result-meta {
   color: var(--muted);
   font-size: 0.74rem;
+}
+
+.status-badge {
+  align-self: flex-start;
+  border-radius: 999px;
+  border: 1px solid #d97706;
+  color: #b45309;
+  font-size: 0.68rem;
+  font-weight: 700;
+  line-height: 1;
+  padding: 0.25rem 0.4rem;
 }
 
 .search-results {

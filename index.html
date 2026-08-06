@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>제5인격 메아리 계산기</title>
-  <link rel="stylesheet" href="style.css?v=4" />
+  <link rel="stylesheet" href="style.css?v=5" />
 </head>
 <body>
   <main>
@@ -12,10 +12,10 @@
     <p class="subtitle">스킨을 사려면 메아리를 얼마나, 그리고 대략 얼마를 현질해야 하는지 계산합니다.</p>
     <p class="mobile-note">이 페이지는 모바일 화면을 기준으로 만들어졌습니다. PC로 봐도 모바일과 동일한 레이아웃으로 표시됩니다.</p>
 
-    <section class="card" id="basis-section">
-      <label>결제 기준 (아래 표에서 골라도 선택됩니다)</label>
-      <div id="basis-radio-group" class="basis-radio-group"></div>
-      <div id="price-list" class="price-list"></div>
+    <section class="card" id="search-section">
+      <label for="skin-search">스킨 검색</label>
+      <input id="skin-search" type="text" placeholder="캐릭터 또는 스킨 이름" autocomplete="off" />
+      <div id="search-results" class="search-results"></div>
     </section>
 
     <section class="card">
@@ -23,29 +23,11 @@
       <input id="owned-echo" type="number" min="0" value="0" />
     </section>
 
-    <section class="card" id="search-section">
-      <label for="skin-search">스킨 검색</label>
-      <input id="skin-search" type="text" placeholder="캐릭터 또는 스킨 이름" autocomplete="off" />
-      <div id="search-results" class="search-results"></div>
-    </section>
-
-    <section class="card" id="character-section">
-      <label for="character-filter">캐릭터로 찾아보기</label>
-      <input id="character-filter" type="text" placeholder="캐릭터 이름" autocomplete="off" />
-      <div id="character-grid" class="card-grid"></div>
-    </section>
-
-    <section class="card" id="skin-section" hidden>
-      <div class="skin-section-header">
-        <h2 id="selected-character-name"></h2>
-        <select id="skin-sort">
-          <option value="name">이름순</option>
-          <option value="price-asc">가격 낮은순</option>
-          <option value="price-desc">가격 높은순</option>
-        </select>
-      </div>
-      <div id="skin-grid" class="card-grid"></div>
-      <p id="skin-unavailable" class="hint warn" hidden></p>
+    <section class="card" id="basis-section">
+      <label>결제 기준</label>
+      <div id="basis-radio-group" class="basis-radio-group"></div>
+      <button id="price-list-toggle" class="text-button" type="button"></button>
+      <div id="price-list" class="price-list" hidden></div>
     </section>
 
     <section class="card" id="rarity-fallback" hidden>
@@ -71,9 +53,28 @@
       <p class="hint" id="result-combination"></p>
       <p class="hint" id="result-caveat"></p>
     </section>
+
+    <section class="card" id="character-section">
+      <label for="character-filter">캐릭터로 찾아보기</label>
+      <input id="character-filter" type="text" placeholder="캐릭터 이름" autocomplete="off" />
+      <div id="character-grid" class="card-grid"></div>
+    </section>
+
+    <section class="card" id="skin-section" hidden>
+      <div class="skin-section-header">
+        <h2 id="selected-character-name"></h2>
+        <select id="skin-sort">
+          <option value="name">이름순</option>
+          <option value="price-asc">가격 낮은순</option>
+          <option value="price-desc">가격 높은순</option>
+        </select>
+      </div>
+      <div id="skin-grid" class="card-grid"></div>
+      <p id="skin-unavailable" class="hint warn" hidden></p>
+    </section>
   </main>
 
-  <script src="src/calc.js?v=4"></script>
-  <script src="app.js?v=4"></script>
+  <script src="src/calc.js?v=5"></script>
+  <script src="app.js?v=5"></script>
 </body>
 </html>

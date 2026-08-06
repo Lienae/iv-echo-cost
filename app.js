@@ -1,6 +1,6 @@
 // index.html의 script/link 쿼리 버전과 맞춰서 올릴 것 — 배포 후에도 브라우저/CDN
 // 캐시 때문에 예전 파일이 보이는 걸 방지하기 위한 수동 캐시 버스팅.
-const ASSET_VERSION = "4";
+const ASSET_VERSION = "5";
 
 const state = {
   rarities: [],
@@ -11,6 +11,7 @@ const state = {
   fxFetchFailed: false,
   selectedCharacter: null,
   selectedSkinId: null,
+  priceListExpanded: false,
 };
 
 async function loadData() {
@@ -129,6 +130,7 @@ function selectSkin(skinId) {
   renderSkinGrid();
   renderGlobalSearchResults();
   render();
+  scrollResultIntoView();
 }
 
 function skinsForSelectedCharacter() {
@@ -163,6 +165,12 @@ function renderSkinGrid() {
 
     card.appendChild(nameEl);
     card.appendChild(priceEl);
+    if (skin.currency === "unknown_echo") {
+      const badge = document.createElement("span");
+      badge.className = "status-badge";
+      badge.textContent = "확인 필요";
+      card.appendChild(badge);
+    }
     card.addEventListener("click", () => selectSkin(skin.id));
     grid.appendChild(card);
   }
@@ -219,6 +227,12 @@ function renderGlobalSearchResults() {
 
     button.appendChild(title);
     button.appendChild(meta);
+    if (skin.currency === "unknown_echo") {
+      const badge = document.createElement("span");
+      badge.className = "status-badge";
+      badge.textContent = "확인 필요";
+      button.appendChild(badge);
+    }
     button.addEventListener("click", () => selectSkin(skin.id));
     resultsEl.appendChild(button);
   }
@@ -271,50 +285,52 @@ function formatPaymentAmount(amount, basis) {
 // 선택된 기준은 카드에 강조 표시되고, 계산에는 그 기준만 쓰인다.
 function renderBasisTables() {
   const container = document.getElementById("price-list");
+  const toggle = document.getElementById("price-list-toggle");
   container.innerHTML = "";
+  container.hidden = !state.priceListExpanded;
+  toggle.textContent = state.priceListExpanded ? "단가표 접기" : "선택한 단가표 보기";
 
-  for (const basis of state.bases) {
-    const group = document.createElement("div");
-    group.className = "price-group" + (basis.id === state.selectedBasisId ? " selected" : "");
+  const basis = currentBasis();
+  if (!state.priceListExpanded || !basis) return;
 
-    const header = document.createElement("button");
-    header.type = "button";
-    header.className = "price-group-header";
-    header.textContent = basis.label;
-    header.addEventListener("click", () => selectBasis(basis.id));
-    group.appendChild(header);
+  const group = document.createElement("div");
+  group.className = "price-group selected";
 
-    if (basis.note || basis.source) {
-      const sourceEl = document.createElement("p");
-      sourceEl.className = "hint";
-      sourceEl.textContent = basis.note || basis.source;
-      group.appendChild(sourceEl);
-    }
+  const header = document.createElement("div");
+  header.className = "price-group-header";
+  header.textContent = basis.label;
+  group.appendChild(header);
 
-    if (basis.currency === "JPY") {
-      const fxEl = document.createElement("p");
-      fxEl.className = "hint";
-      if (state.jpyToKrwRate) {
-        fxEl.textContent = "괄호 안 원화는 실시간 환율 참고값입니다.";
-      } else if (state.fxFetchFailed) {
-        fxEl.textContent = "환율 조회 실패 — 원화 참고액을 표시할 수 없습니다.";
-      } else {
-        fxEl.textContent = "원화 참고액 환산 중...";
-      }
-      group.appendChild(fxEl);
-    }
-
-    for (const pack of basis.packs) {
-      addPriceItem(
-        group,
-        `${pack.echo}메아리`,
-        formatPaymentAmount(pack.price, basis),
-        formatUnitPrice(pack, basis.currencySymbol)
-      );
-    }
-
-    container.appendChild(group);
+  if (basis.note || basis.source) {
+    const sourceEl = document.createElement("p");
+    sourceEl.className = "hint";
+    sourceEl.textContent = basis.note || basis.source;
+    group.appendChild(sourceEl);
   }
+
+  if (basis.currency === "JPY") {
+    const fxEl = document.createElement("p");
+    fxEl.className = "hint";
+    if (state.jpyToKrwRate) {
+      fxEl.textContent = "괄호 안 원화는 실시간 환율 참고값입니다.";
+    } else if (state.fxFetchFailed) {
+      fxEl.textContent = "환율 조회 실패 — 원화 참고액을 표시할 수 없습니다.";
+    } else {
+      fxEl.textContent = "원화 참고액 환산 중...";
+    }
+    group.appendChild(fxEl);
+  }
+
+  for (const pack of basis.packs) {
+    addPriceItem(
+      group,
+      `${pack.echo}메아리`,
+      formatPaymentAmount(pack.price, basis),
+      formatUnitPrice(pack, basis.currencySymbol)
+    );
+  }
+
+  container.appendChild(group);
 }
 
 function selectBasis(id) {
@@ -348,6 +364,11 @@ function renderBasisRadios() {
     label.appendChild(span);
     container.appendChild(label);
   }
+}
+
+function togglePriceList() {
+  state.priceListExpanded = !state.priceListExpanded;
+  renderBasisTables();
 }
 
 async function ensureFxRate() {
@@ -458,6 +479,14 @@ function render() {
   resultSection.hidden = false;
 }
 
+function scrollResultIntoView() {
+  const resultSection = document.getElementById("result");
+  if (resultSection.hidden) return;
+  requestAnimationFrame(() => {
+    resultSection.scrollIntoView({ behavior: "smooth", block: "nearest" });
+  });
+}
+
 async function init() {
   await loadData();
   populateRaritySelect();
@@ -483,6 +512,7 @@ async function init() {
 
   document.getElementById("owned-echo").addEventListener("input", render);
   document.getElementById("rarity-select").addEventListener("change", render);
+  document.getElementById("price-list-toggle").addEventListener("click", togglePriceList);
 
   render();
 }
