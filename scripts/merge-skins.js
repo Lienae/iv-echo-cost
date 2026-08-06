@@ -111,15 +111,15 @@ function main() {
   const out = {
     _note:
       "나무위키 스킨 데이터. data/skins-raw/*.json 전체를 scripts/merge-skins.js로 병합하고 " +
-      "priceRaw 원문을 재파싱해 echoPrice를 계산했다. currency가 'echo'가 아니면 메아리로 살 수 없는 " +
-      "스킨이므로 echoPrice는 null이다.",
+      "priceRaw 원문을 재파싱해 echoPrice를 계산했다. currency가 'echo'가 아니면 메아리로 살 수 없거나 " +
+      "메아리 가격이 확정되지 않은 스킨이므로 echoPrice는 null이다.",
     schema: {
       id: "고유 슬러그 (character-name 기반, 자동 생성)",
       character: "캐릭터 이름",
       name: "스킨 이름",
       rarityId: "rarities.json의 id 참조 (scarce / unique / rare / legendary)",
       echoPrice: "실제 판매 메아리 가격. currency가 echo가 아니거나 파싱 실패 시 null",
-      currency: "결제 수단 (echo / lens / other / unavailable)",
+      currency: "결제 수단 (echo / unknown_echo / lens / fragment / other / unavailable)",
       releaseDate: "출시일 (YYYY-MM-DD, 모르면 null)",
       priceRaw: "나무위키 원문 가격 표기 (참고/재검증용)",
       note: "특이사항 (참고용)",

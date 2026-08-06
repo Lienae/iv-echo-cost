@@ -31,9 +31,9 @@
     "rarityRaw": "희대의",
     "priceRaw": "1000투시경/메아리",
     "echoPrice": null,
-    "currency": "echo",
+    "currency": "unknown_echo",
     "releaseDate": "2025-02-20",
-    "note": "이벤트 상점, 원문 가격 표기 모호(투시경/메아리 병기)"
+    "note": "이벤트 상점, 원문 가격 표기 모호(투시경/메아리 병기). 공개 계산기에서는 메아리 가격 확인 전까지 계산하지 않음"
   },
   {
     "id": "재앙의-도마뱀-꿈의-닌자",

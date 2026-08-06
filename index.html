@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>제5인격 메아리 계산기</title>
-  <link rel="stylesheet" href="style.css?v=2" />
+  <link rel="stylesheet" href="style.css?v=4" />
 </head>
 <body>
   <main>
@@ -23,9 +23,15 @@
       <input id="owned-echo" type="number" min="0" value="0" />
     </section>
 
+    <section class="card" id="search-section">
+      <label for="skin-search">스킨 검색</label>
+      <input id="skin-search" type="text" placeholder="캐릭터 또는 스킨 이름" autocomplete="off" />
+      <div id="search-results" class="search-results"></div>
+    </section>
+
     <section class="card" id="character-section">
-      <label for="character-filter">캐릭터 선택</label>
-      <input id="character-filter" type="text" placeholder="캐릭터 이름으로 검색" autocomplete="off" />
+      <label for="character-filter">캐릭터로 찾아보기</label>
+      <input id="character-filter" type="text" placeholder="캐릭터 이름" autocomplete="off" />
       <div id="character-grid" class="card-grid"></div>
     </section>
 
@@ -67,7 +73,7 @@
     </section>
   </main>
 
-  <script src="src/calc.js?v=2"></script>
-  <script src="app.js?v=2"></script>
+  <script src="src/calc.js?v=4"></script>
+  <script src="app.js?v=4"></script>
 </body>
 </html>

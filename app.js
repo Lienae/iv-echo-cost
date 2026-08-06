@@ -1,6 +1,6 @@
 // index.html의 script/link 쿼리 버전과 맞춰서 올릴 것 — 배포 후에도 브라우저/CDN
 // 캐시 때문에 예전 파일이 보이는 걸 방지하기 위한 수동 캐시 버스팅.
-const ASSET_VERSION = "2";
+const ASSET_VERSION = "4";
 
 const state = {
   rarities: [],
@@ -39,6 +39,7 @@ function currentBasis() {
 
 const CURRENCY_LABELS = {
   unavailable: "구매불가",
+  unknown_echo: "메아리 가격 확인 필요",
   lens: "투시경 전용",
   fragment: "조각 전용",
   other: "기타 재화 전용",
@@ -62,6 +63,10 @@ function priceLabel(skin) {
 function echoPriceOrNull(skin) {
   if (skin.currency !== "echo") return null;
   return skin.echoPrice ?? rarityById(skin.rarityId)?.echoPrice ?? null;
+}
+
+function normalizeSearchText(text) {
+  return String(text || "").trim().toLocaleLowerCase("ko");
 }
 
 // 메아리로 살 수 없는 스킨(가격 null)은 오름차순/내림차순 상관없이 항상 뒤로 밀린다.
@@ -112,6 +117,20 @@ function selectCharacter(char) {
   render();
 }
 
+function selectSkin(skinId) {
+  const skin = state.skins.find((s) => s.id === skinId);
+  if (!skin) return;
+
+  state.selectedCharacter = skin.character;
+  state.selectedSkinId = skin.id;
+  document.getElementById("skin-section").hidden = false;
+  document.getElementById("selected-character-name").textContent = skin.character;
+  renderCharacterGrid();
+  renderSkinGrid();
+  renderGlobalSearchResults();
+  render();
+}
+
 function skinsForSelectedCharacter() {
   const list = state.skins.filter((s) => s.character === state.selectedCharacter);
   const sortMode = document.getElementById("skin-sort").value;
@@ -144,12 +163,64 @@ function renderSkinGrid() {
 
     card.appendChild(nameEl);
     card.appendChild(priceEl);
-    card.addEventListener("click", () => {
-      state.selectedSkinId = skin.id;
-      renderSkinGrid();
-      render();
-    });
+    card.addEventListener("click", () => selectSkin(skin.id));
     grid.appendChild(card);
+  }
+}
+
+function renderGlobalSearchResults() {
+  const resultsEl = document.getElementById("search-results");
+  const input = document.getElementById("skin-search");
+  const query = normalizeSearchText(input.value);
+  resultsEl.innerHTML = "";
+  resultsEl.hidden = query.length === 0;
+
+  if (!query) return;
+
+  const results = state.skins
+    .filter((skin) => {
+      const character = normalizeSearchText(skin.character);
+      const name = normalizeSearchText(skin.name);
+      return character.includes(query) || name.includes(query);
+    })
+    .sort((a, b) => {
+      const aName = normalizeSearchText(a.name);
+      const bName = normalizeSearchText(b.name);
+      const aStarts = aName.startsWith(query) ? 0 : 1;
+      const bStarts = bName.startsWith(query) ? 0 : 1;
+      if (aStarts !== bStarts) return aStarts - bStarts;
+      return `${a.character} ${a.name}`.localeCompare(`${b.character} ${b.name}`, "ko");
+    })
+    .slice(0, 30);
+
+  if (results.length === 0) {
+    const empty = document.createElement("p");
+    empty.className = "hint";
+    empty.textContent = "검색 결과가 없습니다.";
+    resultsEl.appendChild(empty);
+    return;
+  }
+
+  for (const skin of results) {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className =
+      `search-result ${RARITY_CLASS[skin.rarityId] || ""}` +
+      (skin.id === state.selectedSkinId ? " selected" : "") +
+      (skin.currency !== "echo" ? " unavailable" : "");
+
+    const title = document.createElement("span");
+    title.className = "search-result-title";
+    title.textContent = skin.name;
+
+    const meta = document.createElement("span");
+    meta.className = "search-result-meta";
+    meta.textContent = `${skin.character} · ${priceLabel(skin)}`;
+
+    button.appendChild(title);
+    button.appendChild(meta);
+    button.addEventListener("click", () => selectSkin(skin.id));
+    resultsEl.appendChild(button);
   }
 }
 
@@ -188,6 +259,14 @@ function formatUnitPrice(pack, symbol) {
   return `개당 ${unitText}${symbol}/메아리`;
 }
 
+function formatPaymentAmount(amount, basis) {
+  const baseText = `${amount.toLocaleString()}${basis.currencySymbol}`;
+  if (basis.currency !== "JPY" || !state.jpyToKrwRate) return baseText;
+
+  const krwEq = Math.round(amount * state.jpyToKrwRate);
+  return `${baseText} (약 ${krwEq.toLocaleString()}원)`;
+}
+
 // 두 결제 기준을 한 화면에서 비교할 수 있도록 전부 표로 보여준다.
 // 선택된 기준은 카드에 강조 표시되고, 계산에는 그 기준만 쓰인다.
 function renderBasisTables() {
@@ -212,11 +291,24 @@ function renderBasisTables() {
       group.appendChild(sourceEl);
     }
 
+    if (basis.currency === "JPY") {
+      const fxEl = document.createElement("p");
+      fxEl.className = "hint";
+      if (state.jpyToKrwRate) {
+        fxEl.textContent = "괄호 안 원화는 실시간 환율 참고값입니다.";
+      } else if (state.fxFetchFailed) {
+        fxEl.textContent = "환율 조회 실패 — 원화 참고액을 표시할 수 없습니다.";
+      } else {
+        fxEl.textContent = "원화 참고액 환산 중...";
+      }
+      group.appendChild(fxEl);
+    }
+
     for (const pack of basis.packs) {
       addPriceItem(
         group,
         `${pack.echo}메아리`,
-        `${pack.price.toLocaleString()}${basis.currencySymbol}`,
+        formatPaymentAmount(pack.price, basis),
         formatUnitPrice(pack, basis.currencySymbol)
       );
     }
@@ -268,6 +360,7 @@ async function ensureFxRate() {
   } catch (e) {
     state.fxFetchFailed = true;
   }
+  renderBasisTables();
   render();
 }
 
@@ -304,7 +397,7 @@ function currentTargetEcho() {
   const skin = selectedSkin();
   if (skin) {
     if (skin.currency && skin.currency !== "echo") return null; // 메아리로 살 수 없는 스킨
-    return skin.echoPrice ?? rarityById(skin.rarityId)?.echoPrice ?? null;
+    return skin.echoPrice ?? null;
   }
   if (state.skins.length > 0) return null;
   const rarityId = document.getElementById("rarity-select").value;
@@ -341,13 +434,12 @@ function render() {
   document.getElementById("result-echo-price").textContent = `${target}메아리`;
   document.getElementById("result-shortfall").textContent = `${shortfall}메아리`;
   document.getElementById("result-krw").textContent =
-    shortfall === 0 ? "이미 충분함" : `${total.toLocaleString()}${basis.currencySymbol}`;
+    shortfall === 0 ? "이미 충분함" : formatPaymentAmount(total, basis);
 
   if (shortfall > 0 && basis.currency === "JPY") {
     subEl.hidden = false;
     if (state.jpyToKrwRate) {
-      const krwEq = Math.round(total * state.jpyToKrwRate);
-      subEl.textContent = `≈ 약 ${krwEq.toLocaleString()}원 (실시간 환율 참고, 카드사 환율·수수료는 별도)`;
+      subEl.textContent = "원화 환산은 실시간 환율 참고값입니다. 카드사 환율·해외결제 수수료는 별도입니다.";
     } else if (state.fxFetchFailed) {
       subEl.textContent = "환율 조회 실패 — 엔화 금액만 표시됩니다.";
     } else {
@@ -376,6 +468,7 @@ async function init() {
   if (currentBasis()?.currency === "JPY") ensureFxRate();
 
   if (state.skins.length === 0) {
+    document.getElementById("search-section").hidden = true;
     document.getElementById("character-section").hidden = true;
     document.getElementById("skin-section").hidden = true;
     document.getElementById("rarity-fallback").hidden = false;
@@ -383,6 +476,7 @@ async function init() {
       "스킨 데이터가 아직 준비되지 않았습니다. 아래에서 등급으로 계산해주세요.";
   } else {
     renderCharacterGrid();
+    document.getElementById("skin-search").addEventListener("input", renderGlobalSearchResults);
     document.getElementById("character-filter").addEventListener("input", renderCharacterGrid);
     document.getElementById("skin-sort").addEventListener("change", renderSkinGrid);
   }
