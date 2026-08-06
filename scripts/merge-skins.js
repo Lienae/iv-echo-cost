@@ -1,5 +1,7 @@
 #!/usr/bin/env node
-// data/skins-raw/batch-1.json ~ batch-7.json 을 합쳐 data/skins.json 을 생성한다.
+// data/skins-raw/ 밑의 모든 *.json 파일(batch-1..7 + 이후 추가되는 incremental 파일)을
+// 합쳐 data/skins.json 을 생성한다. 새 raw 파일을 추가한 뒤 이 스크립트를 다시 돌리면
+// 자동으로 인식되므로, 이 파일 목록을 하드코딩하지 않는다.
 // 배치마다 echoPrice 추출 규칙이 달랐으므로(TODO.md 참고), 모든 배치의 echoPrice를
 // 무시하고 priceRaw 원문에서 규칙에 따라 다시 파싱한다.
 // 규칙: priceRaw 안에서 "메아리" 단위가 붙은 숫자들 중 등급 기준가(rarities.json)와
@@ -12,7 +14,8 @@ const path = require("path");
 
 const DATA_DIR = path.join(__dirname, "..", "data");
 const RAW_DIR = path.join(DATA_DIR, "skins-raw");
-const BATCH_FILES = [1, 2, 3, 4, 5, 6, 7].map((n) => `batch-${n}.json`);
+// 파일명 정렬 순서대로 처리해야 id 슬러그 충돌 시 붙는 -2, -3 접미사가 매번 같게 나온다.
+const BATCH_FILES = fs.readdirSync(RAW_DIR).filter((f) => f.endsWith(".json")).sort();
 
 const UNIT_WORDS = ["메아리", "조각", "파편", "잔영", "투시경", "이벤트\\s*재화", "황금\\s*사과"];
 const TOKEN_RE = new RegExp(`(\\d+)\\s*(${UNIT_WORDS.join("|")})?`, "g");
@@ -107,7 +110,7 @@ function main() {
 
   const out = {
     _note:
-      "나무위키 스킨 데이터. 7개 배치(data/skins-raw/batch-*.json)를 scripts/merge-skins.js로 병합하고 " +
+      "나무위키 스킨 데이터. data/skins-raw/*.json 전체를 scripts/merge-skins.js로 병합하고 " +
       "priceRaw 원문을 재파싱해 echoPrice를 계산했다. currency가 'echo'가 아니면 메아리로 살 수 없는 " +
       "스킨이므로 echoPrice는 null이다.",
     schema: {
