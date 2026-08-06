@@ -79,6 +79,18 @@ input, select {
   line-height: 1.4;
 }
 
+.hint.warn {
+  color: #d97706;
+}
+
+#skin-sort {
+  margin-bottom: 0.75rem;
+}
+
+.skin-select-label {
+  margin-top: 0;
+}
+
 .result-row {
   display: flex;
   justify-content: space-between;

@@ -17,9 +17,17 @@
     </section>
 
     <section class="card">
-      <label for="skin-select">스킨 선택</label>
+      <label for="skin-sort">정렬</label>
+      <select id="skin-sort">
+        <option value="character">캐릭터순</option>
+        <option value="price-asc">가격 낮은순</option>
+        <option value="price-desc">가격 높은순</option>
+        <option value="name">이름순</option>
+      </select>
+      <label for="skin-select" class="skin-select-label">스킨 선택</label>
       <select id="skin-select"></select>
       <p id="skin-status" class="hint"></p>
+      <p id="skin-unavailable" class="hint warn" hidden></p>
     </section>
 
     <section class="card" id="rarity-fallback" hidden>
